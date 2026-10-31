@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cyber Risk Lab: Kill Chain, ATT&CK, Risk and Threat Modeling</title>
+<style>
+:root{--bg:#f3f5f2;--fg:#17211b;--card:#fff;--mut:#5b675f;--bd:#d3dad4;--ac:#1f7a4d;--bad:#b3261e;--warn:#b7791f;--sel:#e3f1e8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1612;--fg:#e4ebe6;--card:#17211b;--mut:#9aa89f;--bd:#2c3a31;--ac:#4cc380;--bad:#ff7b72;--warn:#e3b341;--sel:#1d3326;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1612;--fg:#e4ebe6;--card:#17211b;--mut:#9aa89f;--bd:#2c3a31;--ac:#4cc380;--bad:#ff7b72;--warn:#e3b341;--sel:#1d3326;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Times New Roman",serif}
+h1,h2,h3,button,select,label,th,.tab{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
+header{padding:28px 20px 8px;max-width:1000px;margin:auto}h1{margin:0 0 6px;font-size:clamp(26px,5vw,40px);letter-spacing:-.5px}header p{margin:0;color:var(--mut);max-width:65ch}
+nav{display:flex;gap:6px;overflow-x:auto;max-width:1000px;margin:14px auto 0;padding:0 20px}
+.tab{border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:8px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;font-size:14px}
+.tab[aria-selected=true]{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:1000px;margin:auto;padding:16px 20px 60px}section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin:12px 0}
+h2{margin:8px 0}h3{margin:0 0 6px;font-size:17px}.mut{color:var(--mut)}
+button.b{background:var(--ac);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:14px}button.b.o{background:none;color:var(--fg);border:1px solid var(--bd)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.track{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:30px 0 10px}
+.st{border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:6px;padding:8px 2px;font-size:12px;text-align:center;cursor:pointer;min-height:62px}
+.st b{display:block;font-size:18px}.st.done{background:var(--sel);border-color:var(--ac)}.st.cur{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad)}.st.blk{background:var(--ac);color:#fff}
+.dot{position:absolute;top:-26px;left:7%;font-size:22px;transition:left .8s ease;transform:translateX(-50%)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:6px;padding:10px;text-align:left;cursor:pointer;font-size:13px}.chip.on{background:var(--sel);border-color:var(--ac)}.chip.lit{background:var(--ac);color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.two{grid-template-columns:1fr}}
+.pro{color:var(--ac)}.con{color:var(--bad)}
+input[type=range]{width:100%}.meter{height:14px;border-radius:7px;background:var(--bd);overflow:hidden}.meter i{display:block;height:100%;background:var(--ac);transition:width .4s,background .4s}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}
+.big{font:700 28px "Trebuchet MS",Arial,sans-serif}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header><h1>Cyber Risk Lab</h1><p>Run an attack, watch it get stopped, then see how risk is measured, modeled and reported. Every tab has a plain-language working principle, pros and cons, and real deployments.</p></header>
+<nav role="tablist" id="nav"></nav>
+<main>
+<section id="kc"><h2>Cyber Kill Chain: seven stages of an attack</h2>
+<p class="mut">Pick where your defense sits, then press Play. The attacker advances one stage at a time until a control blocks them. Stopping early costs the attacker the most.</p>
+<div class="row"><button class="b" id="play">Play</button><button class="b o" id="step">Step</button><button class="b o" id="rst">Reset</button>
+<label>Defense placed at <select id="blk"></select></label></div>
+<div class="track" id="track"><div class="dot" id="dot" aria-hidden="true">☠</div></div>
+<div class="card" id="kcinfo"></div>
+<div class="two"><div class="card"><h3>Pros</h3><ul class="pro"><li>Simple, memorable model for planning layered defenses.</li><li>Shows the earlier you break the chain, the cheaper the incident.</li></ul></div>
+<div class="card"><h3>Cons</h3><ul class="con"><li>Assumes a linear attack; real intrusions loop and skip steps.</li><li>Perimeter-focused; weaker for insiders and cloud abuse.</li></ul></div></div>
+<div class="card"><h3>Where it works</h3><p><b>Defense:</b> originated at Lockheed Martin from military “kill chain” thinking; used in government and defense contractor security operations. <b>Commercial:</b> banks and retailers map alerts to stages in their SOC (Security Operations Center). <b>Other:</b> training and tabletop exercises in hospitals and utilities.</p></div></section>
+
+<section id="at"><h2>MITRE ATT&CK: 14 tactics, many techniques</h2>
+<p class="mut">ATT&CK describes the <i>why</i> (tactic) and <i>how</i> (technique and sub-technique) of adversary behavior. Click a tactic, or run a campaign to see the order attackers typically work in. Example from the matrix: T1547, Boot or Logon Autostart Execution, sits under Persistence.</p>
+<div class="row"><button class="b" id="camp">Run campaign</button></div>
+<div class="grid" id="tac"></div><div class="card" id="tinfo">Select a tactic.</div>
+<div class="two"><div class="card"><h3>Pros</h3><ul class="pro"><li>Detailed, shared vocabulary built from observed attacks.</li><li>Each technique lists detections and mitigations.</li></ul></div>
+<div class="card"><h3>Cons</h3><ul class="con"><li>Large; teams need prioritizing to avoid coverage theater.</li><li>Describes behavior, not how likely you are to be hit.</li></ul></div></div>
+<div class="card"><h3>Where it works</h3><p><b>Commercial:</b> security vendors tag detections with ATT&CK IDs, and red teams plan tests with it. <b>Government and defense:</b> widely adopted by public agencies for threat modeling and sharing. <b>Other:</b> health and energy sectors use it to compare defenses to known threat groups.</p></div></section>
+
+<section id="rk"><h2>Risk basics: threat, vulnerability, impact, likelihood</h2>
+<div class="two"><div class="card"><h3>Likelihood and impact lab</h3>
+<label>How often could it happen?<select id="lk"><option value="12">Once a month (12.0 per year)</option><option value="1" selected>Once a year (1.0)</option><option value="0.1">Once in 10 years (0.10)</option></select></label>
+<label>Impact if it happens: <b id="imv"></b><input type="range" id="im" min="1" max="1000" value="200"></label>
+<label>Control strength: <b id="ctv"></b><input type="range" id="ct" min="0" max="95" value="40"></label>
+<p>Expected yearly loss = likelihood × impact × (1 − control strength)</p><div class="big" id="ale"></div><div class="meter"><i id="alb"></i></div><p id="alt" class="mut"></p></div>
+<div class="card"><h3>“Nines” reliability</h3><p class="mut">A process that is 99% reliable fails once per 100 runs. More nines cost more effort.</p>
+<select id="nn"><option value="2">99% (two nines)</option><option value="3">99.9%</option><option value="4">99.99%</option><option value="5">99.999% (five nines)</option></select>
+<p id="nnt"></p><h3>Key terms</h3><p><b>Threat:</b> event that could harm assets. <b>Vulnerability:</b> the “hole in the fence”. <b>Impact:</b> size of harm. <b>Likelihood:</b> annualized probability. <b>Threat agents:</b> intentional (insiders, APTs, fraudsters), unintentional (errors, misconfigurations), and hazards (storms, power failure).</p></div></div>
+<div class="card"><h3>Risk register (add your own)</h3><div class="row"><input id="rn" placeholder="Describe a risk" style="flex:1;min-width:180px;padding:7px"><button class="b" id="radd">Add using the sliders</button></div>
+<div class="wrap"><table><thead><tr><th>Ref</th><th>Risk</th><th>Likelihood/yr</th><th>Impact</th><th>Controls</th><th>Level</th><th>Priority</th></tr></thead><tbody id="rb"></tbody></table></div>
+<p class="mut">A register is one central place for every known risk. Partitioning it by business unit helps focus but can hide global risks, so keep a roll-up view. Protect it: it is sensitive.</p></div>
+<div class="two"><div class="card"><h3>Pros</h3><ul class="pro"><li>Turns security into business terms leaders can fund.</li><li>Central view replaces scattered data sources.</li></ul></div><div class="card"><h3>Cons</h3><ul class="con"><li>Likelihood is subjective, weak for new technology.</li><li>Existential risks resist simple modeling.</li></ul></div></div>
+<div class="card"><h3>Where it works</h3><p><b>Commercial:</b> insurers and underwriters model loss events daily; boards review registers. <b>Defense and government:</b> formal risk assessment reports (RAR) before systems go live. <b>Other:</b> hospitals and airlines rank critical processes such as emergency triage or flight checks.</p></div></section>
+
+<section id="tm"><h2>Threat modeling: STRIDE, DREAD, PASTA, attack trees</h2>
+<h3>STRIDE: click a letter</h3><div class="grid" id="str"></div><div class="card" id="sinfo">Select a threat type.</div>
+<div class="card"><h3>DREAD calculator (1 low to 10 high)</h3><div id="dr"></div><div class="big" id="drs"></div><p class="mut" id="drt"></p></div>
+<div class="card"><h3>PASTA and attack trees</h3><p><b>PASTA</b> (Process for Attack Simulation and Threat Analysis) moves through stages: define objectives, identify threats, analyze vulnerabilities, simulate attacks. <b>Attack trees</b> put the attacker’s goal at the root and split it into sub-goals:</p>
+<pre style="overflow-x:auto;margin:0">Steal customer data
+├─ Phish an employee ── harvest password ── log in
+├─ Exploit public web app ── SQL injection
+└─ Insider copy ── USB or cloud upload</pre></div>
+<div class="two"><div class="card"><h3>Pros</h3><ul class="pro"><li>Finds design flaws before attackers do.</li><li>Covers privacy, safety and non-repudiation, not only CIA.</li></ul></div><div class="card"><h3>Cons</h3><ul class="con"><li>Needs skilled people and time.</li><li>DREAD scores are subjective and can vary by rater.</li></ul></div></div>
+<div class="card"><h3>Where it works</h3><p><b>Commercial:</b> software firms run STRIDE in design reviews; STRIDE was popularized at Microsoft. <b>Defense:</b> attack trees and simulation for weapons and communications systems. <b>Other:</b> medical device and automotive makers model safety threats.</p></div></section>
+
+<section id="vi"><h2>Risk visibility: IOCs, sharing and CVSS</h2>
+<div class="card"><h3>Indicators of compromise: classify the evidence</h3><div class="grid" id="ioc"></div><p id="iot" class="mut">Click an item.</p>
+<p><b>IOC</b> is evidence a breach happened or is happening; types include URLs, domain names, IP addresses and hash values. <b>IOA</b> (indicator of attack) is an IOC signaled live by ongoing events. <b>Precursors</b> hint at future attacks and let you raise a “risk throttle”, for example before a charged political event or after bad press.</p></div>
+<div class="card"><h3>Sharing threat intelligence</h3><p>Organizations share IOCs, analyst notes and remediation steps internally and through ISACs and ISAOs, which give sector-specific threat data. Some firms hesitate because disclosure may expose issues; the payoff is faster remediation when similar attacks appear.</p></div>
+<div class="card"><h3>CVSS severity</h3><label>Base score: <b id="cvv"></b><input type="range" id="cv" min="0" max="100" value="75"></label><div class="meter"><i id="cvb"></i></div><div class="big" id="cvs"></div>
+<p class="mut">0 None, 0.1 to 3.9 Low, 4.0 to 6.9 Medium, 7.0 to 8.9 High, 9.0 to 10.0 Critical. Created 2005, maintained by FIRST.org, version 4 released 2023.</p></div>
+<div class="two"><div class="card"><h3>Pros</h3><ul class="pro"><li>Shared intelligence speeds response.</li><li>CVSS gives a common patch-priority scale.</li></ul></div><div class="card"><h3>Cons</h3><ul class="con"><li>CVSS ignores your own asset value and context.</li><li>Some IOCs need heavy analysis, so they are not real-time.</li></ul></div></div>
+<div class="card"><h3>Where it works</h3><p><b>Commercial:</b> financial firms exchange threat data through their sector ISAC; scanners rank findings by CVSS. <b>Government and defense:</b> national vulnerability databases publish CVSS scores. <b>Other:</b> health and energy ISACs share indicators among hospitals and utilities.</p></div></section>
+
+<section id="gl"><h2>Glossary of full forms</h2><div class="card wrap"><table id="gt"></table></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),H=(e,h)=>e.innerHTML=h;
+const tabs=[["kc","Kill chain"],["at","ATT&CK"],["rk","Risk"],["tm","Threat modeling"],["vi","Visibility"],["gl","Glossary"]];
+tabs.forEach(([id,t],i)=>{const b=document.createElement("button");b.className="tab";b.textContent=t;b.setAttribute("role","tab");b.onclick=()=>show(id);b.dataset.id=id;$("#nav").append(b)});
+function show(id){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==id));document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.id==id));try{history.replaceState(null,"","#"+id)}catch(e){}}
+show(tabs.some(t=>"#"+t[0]==location.hash)?location.hash.slice(1):"kc");
+
+/* Kill chain */
+const KC=[
+["Reconnaissance","Research the target: staff, domains, exposed services.","Browsing a company site and social media for employee names and email formats.","Limit public data, monitor scans, train staff.","Reconnaissance"],
+["Weaponization","Pair an exploit with a payload to build the attack tool.","Embedding malware in a document.","Threat intelligence, file-type controls.","Resource Development"],
+["Delivery","Send the weapon to the target.","Phishing email, malicious link, infected USB.","Email filtering, web proxy, awareness training.","Initial Access"],
+["Exploitation","The weapon triggers a flaw and runs code.","Opening the document runs a macro.","Patching, application hardening, allow-listing.","Execution"],
+["Installation","Malware sets up persistent access.","A backdoor added to startup items (T1547).","Endpoint detection, least privilege, integrity checks.","Persistence, Privilege Escalation, Defense Evasion"],
+["Command and Control","Infected host calls home so the attacker can steer it.","Beaconing to a suspicious domain.","DNS and egress filtering, IOC blocking.","Command and Control"],
+["Actions on Objectives","Attacker achieves the goal.","Data theft, encryption for ransom, sabotage.","Segmentation, data-loss prevention, backups, incident response.","Collection, Exfiltration, Impact, Lateral Movement"]];
+let ci=-1,tm=null;
+H($("#track"),$("#track").innerHTML+KC.map((k,i)=>`<button class="st" data-i="${i}"><b>${i+1}</b>${k[0]}</button>`).join(""));
+H($("#blk"),`<option value="-1">No defense</option>`+KC.map((k,i)=>`<option value="${i}">${i+1}. ${k[0]}</option>`).join(""));
+function kcShow(i,msg){const k=KC[i];if(!k)return H($("#kcinfo"),"<b>Ready.</b> Press Play or click a stage to read how it works.");
+H($("#kcinfo"),`<h3>${i+1}. ${k[0]}</h3><p><b>Working principle:</b> ${k[1]}</p><p><b>Example:</b> ${k[2]}</p><p><b>Defender response:</b> ${k[3]}</p><p><b>ATT&CK tactics:</b> ${k[4]}</p>${msg?`<p><b>${msg}</b></p>`:""}`)}
+function paint(){document.querySelectorAll(".st").forEach((e,i)=>{const b=+$("#blk").value;e.className="st"+(i<ci?" done":"")+(i==ci?" cur":"")+(i==b&&ci>=i?" blk":"")});
+$("#dot").style.left=((Math.max(ci,0)+.5)/7*100)+"%"}
+function step(){const b=+$("#blk").value;if(ci>=6||(ci>=0&&ci==b)){stop();return}
+ci++;if(ci==b){stop();paint();return kcShow(ci,"Blocked here. The attack ends and later stages never happen.")}
+paint();kcShow(ci,ci==6?"Objective achieved. Defense failed upstream.":"");if(ci==6)stop()}
+function stop(){clearInterval(tm);tm=null;$("#play").textContent="Play"}
+$("#play").onclick=()=>{if(tm)return stop();if(ci>=6||ci==+$("#blk").value)reset();step();tm=setInterval(step,1800);$("#play").textContent="Pause"};
+$("#step").onclick=step;function reset(){stop();ci=-1;paint();kcShow(-1)}$("#rst").onclick=reset;$("#blk").onchange=reset;
+document.querySelectorAll(".st").forEach(e=>e.onclick=()=>kcShow(+e.dataset.i));reset();
+
+/* ATT&CK */
+const TA=[["Reconnaissance","Gather information about the target.","Active Scanning"],["Resource Development","Build or buy infrastructure and tools.","Acquire Infrastructure"],["Initial Access","Get a first foothold.","Phishing"],["Execution","Run malicious code.","Command and Scripting Interpreter"],["Persistence","Keep access across restarts.","Boot or Logon Autostart Execution (T1547)"],["Privilege Escalation","Gain higher permissions.","Abuse Elevation Control Mechanism"],["Defense Evasion","Avoid detection.","Obfuscated Files or Information"],["Credential Access","Steal accounts and passwords.","Brute Force"],["Discovery","Learn the environment.","Account Discovery"],["Lateral Movement","Move between systems.","Remote Services"],["Collection","Gather data of interest.","Data from Local System"],["Command and Control","Communicate with compromised systems.","Application Layer Protocol"],["Exfiltration","Steal data out.","Exfiltration Over Web Service"],["Impact","Disrupt, destroy or manipulate.","Data Encrypted for Impact"]];
+H($("#tac"),TA.map((t,i)=>`<button class="chip" data-i="${i}"><b>${t[0]}</b></button>`).join(""));
+function tsel(i){document.querySelectorAll("#tac .chip").forEach((e,j)=>e.classList.toggle("on",i==j));const t=TA[i];
+const kc=KC.filter(k=>k[4].includes(t[0])).map(k=>k[0]).join(", ")||"Spans several stages";
+H($("#tinfo"),`<h3>${t[0]}</h3><p><b>Goal:</b> ${t[1]}</p><p><b>Sample technique:</b> ${t[2]}</p><p><b>Kill chain link:</b> ${kc}</p><p class="mut">Each tactic lists techniques, sub-techniques and detections to monitor.</p>`)}
+document.querySelectorAll("#tac .chip").forEach(e=>e.onclick=()=>tsel(+e.dataset.i));
+$("#camp").onclick=()=>{let i=0;const c=document.querySelectorAll("#tac .chip");c.forEach(e=>e.classList.remove("lit"));const t=setInterval(()=>{if(i>=c.length)return clearInterval(t);c[i].classList.add("lit");tsel(i);i++},900)};
+
+/* Risk */
+const LV=v=>v<10?["Low","var(--ac)"]:v<100?["Medium","var(--warn)"]:["High","var(--bad)"];
+function calc(){const l=+$("#lk").value,i=+$("#im").value,c=+$("#ct").value,a=l*i*(1-c/100),[n,col]=LV(a);
+$("#imv").textContent="$"+i+"k";$("#ctv").textContent=c+"%";$("#ale").textContent="$"+a.toFixed(1)+"k per year";
+$("#alb").style.width=Math.min(100,a/3)+"%";$("#alb").style.background=col;$("#alt").textContent="Level: "+n+(l>=12?" (frequent events add up fast)":"")+". Raise controls or reduce likelihood to lower it.";
+const f=100/Math.pow(10,0);}
+["lk","im","ct"].forEach(x=>$("#"+x).oninput=calc);calc();
+$("#nn").onchange=()=>{const n=+$("#nn").value;H($("#nnt"),`Fails about once every <b>${Math.pow(10,n).toLocaleString()}</b> runs.`)};$("#nn").onchange();
+let reg=[["Phishing leads to credential theft",12,50,"Email filter","Medium"],["Cloud storage misconfiguration",1,300,"Config scans","Medium"]];
+function rr(){H($("#rb"),reg.map((r,i)=>{const a=r[1]*r[2]*0.6,[n]=LV(a);return`<tr><td>R${i+1}</td><td>${r[0]}</td><td>${r[1]}</td><td>$${r[2]}k</td><td>${r[3]}</td><td>${n}</td><td>${n=="High"?1:n=="Medium"?2:3}</td></tr>`}).join(""))}
+$("#radd").onclick=()=>{const t=$("#rn").value.trim();if(!t)return;reg.push([t,+$("#lk").value,+$("#im").value,"Controls "+$("#ct").value+"%",""]);$("#rn").value="";rr()};rr();
+
+/* STRIDE / DREAD */
+const ST=[["Spoofing","Impersonating another user","Authentication","Multi-factor sign-in"],["Tampering","Altering data","Integrity","Hashing, signatures, access control"],["Repudiation","Denying actions","Non-repudiation","Audit logs, digital signatures"],["Information disclosure","Exposing information","Confidentiality","Encryption, least privilege"],["Denial of Service","Disrupting service","Availability","Rate limits, redundancy"],["Elevation of privilege","Gaining unauthorized access","Authorization","Least privilege, patching"]];
+H($("#str"),ST.map((s,i)=>`<button class="chip" data-i="${i}"><b>${s[0][0]}</b> ${s[0]}</button>`).join(""));
+document.querySelectorAll("#str .chip").forEach(e=>e.onclick=()=>{document.querySelectorAll("#str .chip").forEach(x=>x.classList.toggle("on",x==e));const s=ST[+e.dataset.i];H($("#sinfo"),`<b>${s[0]}:</b> ${s[1]}. Property violated: <b>${s[2]}</b>. Typical control: ${s[3]}.`)});
+const DR=[["Damage potential","Extent of damage"],["Reproducibility","How easily it can be repeated"],["Exploitability","Effort needed to exploit"],["Affected users","How many users"],["Discoverability","How easily it is found"]];
+H($("#dr"),DR.map((d,i)=>`<label>${d[0]} <span class="mut">(${d[1]})</span> <b id="d${i}">5</b><input type="range" min="1" max="10" value="5" data-i="${i}"></label>`).join(""));
+function dc(){let s=0;document.querySelectorAll("#dr input").forEach(x=>{s+=+x.value;$("#d"+x.dataset.i).textContent=x.value});const a=s/5;$("#drs").textContent=a.toFixed(1)+" / 10";$("#drt").textContent=a>=7?"High priority threat":a>=4?"Medium priority threat":"Low priority threat"}
+document.querySelectorAll("#dr input").forEach(x=>x.oninput=dc);dc();
+
+/* Visibility */
+const IO=[["https://pay-secure.example/login","URL","IOC"],["198.51.100.23","IP address","IOC"],["bad-updates.example","Domain name","IOC"],["e3b0c442…b855","Hash value","IOC"],["Live attempt to run known malware","Event in progress","IOA"],["Spike of attacks on the sector after a headline breach","Trend","Precursor"]];
+H($("#ioc"),IO.map((x,i)=>`<button class="chip" data-i="${i}">${x[0]}</button>`).join(""));
+document.querySelectorAll("#ioc .chip").forEach(e=>e.onclick=()=>{const x=IO[+e.dataset.i];$("#iot").innerHTML=`<b>${x[1]}</b> → ${x[2]}`});
+function cv(){const v=$("#cv").value/10,[n,c]=v==0?["None","var(--mut)"]:v<4?["Low","var(--ac)"]:v<7?["Medium","var(--warn)"]:v<9?["High","var(--bad)"]:["Critical","var(--bad)"];$("#cvv").textContent=v.toFixed(1);$("#cvs").textContent=n;$("#cvb").style.width=v*10+"%";$("#cvb").style.background=c}
+$("#cv").oninput=cv;cv();
+
+/* Glossary */
+const G=[["APT","Advanced Persistent Threat"],["ATT&CK","Adversarial Tactics, Techniques, and Common Knowledge"],["TTP","Tactics, Techniques, and Procedures"],["IOC","Indicator of Compromise"],["IOA","Indicator of Attack"],["ISAC","Information Sharing and Analysis Center"],["ISAO","Information Sharing and Analysis Organization"],["CVSS","Common Vulnerability Scoring System"],["FIRST","Forum of Incident Response and Security Teams (maintains CVSS)"],["STRIDE","Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege"],["DREAD","Damage, Reproducibility, Exploitability, Affected users, Discoverability"],["PASTA","Process for Attack Simulation and Threat Analysis"],["RAR","Risk Assessment Report"],["CIA","Confidentiality, Integrity, Availability"],["DoS","Denial of Service"],["C2","Command and Control"],["SOC","Security Operations Center"],["URL","Uniform Resource Locator"],["Existential risk","Risk of total loss of the organization"],["Risk register","Central log of risks, impacts and controls"]];
+H($("#gt"),"<tr><th>Term</th><th>Meaning</th></tr>"+G.map(g=>`<tr><td><b>${g[0]}</b></td><td>${g[1]}</td></tr>`).join(""));
+</script></body></html>

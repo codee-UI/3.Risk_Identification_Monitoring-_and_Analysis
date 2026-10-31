@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Risk Lab: interactive risk management simulation</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f1;--card:#fff;--ink:#10222b;--mut:#4d6169;--line:#cfdad6;--teal:#1f7a6d;--amb:#c98a0b;--red:#c8433a;--ind:#4a5aa8;--grn:#4e9a3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a20;--card:#162830;--ink:#e6efec;--mut:#9db3ba;--line:#2a4049;--teal:#4cc0ae;--amb:#e9b53f;--red:#ef7a70;--ind:#8f9dea;--grn:#82c96d}}
+:root[data-theme="dark"]{--bg:#0e1a20;--card:#162830;--ink:#e6efec;--mut:#9db3ba;--line:#2a4049;--teal:#4cc0ae;--amb:#e9b53f;--red:#ef7a70;--ind:#8f9dea;--grn:#82c96d}
+html{scroll-padding-top:60px}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Source Serif 4",Georgia,serif}
+h1,h2,h3,button,nav a,.sans{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+header{padding:40px 20px 24px;max-width:1000px;margin:auto}
+h1{font-size:clamp(32px,6vw,56px);line-height:1.05;margin:0 0 10px;font-weight:800;letter-spacing:-.02em}
+header p{max-width:62ch;color:var(--mut);margin:0}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding:8px 12px}
+nav a{white-space:nowrap;padding:6px 12px;border-radius:99px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
+nav a:hover{background:var(--card)}
+main{max-width:1000px;margin:auto;padding:0 20px 60px}
+section{padding:36px 0 8px}
+h2{font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+.lead{color:var(--mut);max-width:70ch;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:12px 0}
+button{font-size:14px;font-weight:600;border:1px solid var(--teal);background:var(--teal);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer}
+button.ghost{background:transparent;color:var(--teal)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--amb);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.st{border:2px solid var(--line);border-radius:10px;padding:10px;font-family:"Bricolage Grotesque",sans-serif;font-size:14px;cursor:pointer;background:var(--card);color:var(--ink);text-align:left;transition:.3s}
+.st b{display:block;font-size:15px}.st.on{border-color:var(--teal);background:var(--teal);color:#fff;transform:translateY(-4px)}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
+.node{padding:10px 12px;border-radius:8px;background:var(--bg);border:2px solid var(--line);font:600 14px "Bricolage Grotesque",sans-serif;transition:.35s;text-align:center}
+.node.lit{background:var(--red);color:#fff;border-color:var(--red)}.node.blocked{background:var(--ind);color:#fff;border-color:var(--ind)}
+.arrow{color:var(--mut)}
+label{display:block;font:600 14px "Bricolage Grotesque",sans-serif;margin:10px 0 2px}
+input[type=range]{width:100%;accent-color:var(--teal)}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.big{font:800 28px "Bricolage Grotesque",sans-serif}.small{font-size:13px;color:var(--mut)}
+.bar{height:26px;border-radius:6px;background:var(--teal);transition:width 1s;color:#fff;font:600 13px/26px "Bricolage Grotesque",sans-serif;padding-left:8px;white-space:nowrap;overflow:hidden}
+.bars div.track{background:var(--bg);border-radius:6px;margin:8px 0}
+table.m{border-collapse:collapse;width:100%;font:600 12px "Bricolage Grotesque",sans-serif;text-align:center}
+table.m td,table.m th{border:2px solid var(--card);padding:10px 4px;cursor:pointer}
+table.m th{cursor:default;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.mini{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card);cursor:pointer;font-size:14px}
+.mini h3{margin:0 0 2px;font-size:17px}.mini.on{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal)}
+details{border:1px solid var(--line);border-radius:10px;background:var(--card);margin:10px 0;padding:4px 14px}
+summary{cursor:pointer;font:700 15px "Bricolage Grotesque",sans-serif;padding:8px 0}
+.dd{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding-bottom:10px;font-size:15px}
+.dd h4{margin:0 0 4px;font-family:"Bricolage Grotesque",sans-serif}.dd ul,.dd ol{margin:0;padding-left:20px}
+.pro h4{color:var(--grn)}.con h4{color:var(--red)}
+input[type=search]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+dl{margin:10px 0}dt{font:700 15px "Bricolage Grotesque",sans-serif;margin-top:8px}dd{margin:0;color:var(--mut)}
+.tree{font:14px "Bricolage Grotesque",sans-serif;margin:0;padding-left:18px}.tree li{margin:4px 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header><h1>Risk Lab</h1><p>Play with the full risk management lifecycle: frameworks, assessment maths, treatment choices, threat modeling and compliance. Every module has a simulation, a step-by-step working principle, pros and cons, and real deployments.</p></header>
+<nav><a href="#rmf">1 Frameworks</a><a href="#chain">2 Risk event</a><a href="#quant">3 Quantitative</a><a href="#qual">4 Qualitative</a><a href="#treat">5 Treatment</a><a href="#threat">6 Threat modeling</a><a href="#legal">7 Compliance</a><a href="#gloss">Glossary</a></nav>
+<main>
+
+<section id="rmf"><h2>1. Frameworks: NIST RMF, CSF, ISO 27000</h2>
+<p class="lead">The NIST RMF (SP 800-37 Rev. 2) is a 7-step repeatable loop. Press play, or click a step.</p>
+<div class="card"><div class="row"><button id="play">Play loop</button><span class="small">SP 800-39 view: Frame, Assess, Respond, Monitor</span></div>
+<div class="steps" id="rmfSteps" style="margin-top:12px"></div><p id="rmfTxt" style="margin:14px 0 0"></p></div>
+<div class="grid"><div class="mini"><h3>NIST CSF</h3>Identify, Protect, Detect, Respond, Recover. Voluntary, “a la carte”, simpler for non-federal organizations.</div>
+<div class="mini"><h3>ISO/IEC 27000 series</h3>Audit framework for an Information Security Management System (ISMS). Widely adopted outside the US; 27005 covers risk.</div>
+<div class="mini"><h3>SP 800-53 / 800-171</h3>800-53 is the control catalog. 800-171 protects Controlled Unclassified Information held by private suppliers.</div></div>
+<div id="dd-rmf"></div></section>
+
+<section id="chain"><h2>2. Anatomy of a risk event</h2>
+<p class="lead">Per NIST SP 800-30: a threat source initiates a threat event that exploits a vulnerability, causing an adverse impact. Controls can break the chain.</p>
+<div class="card"><div class="row"><button id="run">Launch attack</button><label style="margin:0"><input type="checkbox" id="ctl"> Security controls enabled (patching, firewall, IPS)</label></div>
+<div class="chain" id="chainEl"></div><p id="chainTxt" class="small"></p>
+<p class="small">Assessment steps (SP 800-30): prepare, then identify threat sources and events, vulnerabilities and predisposing conditions, likelihood, magnitude of impact, determine risk; then communicate results and maintain the assessment.</p></div>
+<div id="dd-chain"></div></section>
+
+<section id="quant"><h2>3. Quantitative assessment: SLE, ARO, ALE</h2>
+<p class="lead">SLE = AV × EF. ALE = SLE × ARO. Defaults are the wiring-center fire example from the text.</p>
+<div class="card"><label>Asset value (AV): $<span id="avv"></span></label><input type="range" id="av" min="1000" max="500000" step="1000" value="36000">
+<label>Exposure factor (EF): <span id="efv"></span>%</label><input type="range" id="ef" min="1" max="100" value="25">
+<label>Annual rate of occurrence (ARO): <span id="arov"></span> (once every <span id="aroy"></span> years)</label><input type="range" id="aro" min="1" max="3650" value="100">
+<div class="out"><div><div class="small">SLE</div><div class="big" id="sle"></div></div><div><div class="small">ALE</div><div class="big" id="ale"></div></div><div><div class="small">Max sensible yearly control cost</div><div class="big" id="cap"></div></div></div>
+<div class="bars"><div class="track"><div class="bar" id="b1"></div></div><div class="track"><div class="bar" id="b2" style="background:var(--amb)"></div></div></div>
+<p class="small">Rule of thumb: do not spend more than the loss you prevent. A control costing more per year than the ALE is hard to justify.</p></div>
+<div id="dd-quant"></div></section>
+
+<section id="qual"><h2>4. Qualitative assessment: likelihood × impact</h2>
+<p class="lead">Click any cell to read the risk level. Used in workshops and scenario discussions where money values are unknown.</p>
+<div class="card"><table class="m" id="mx"></table><p id="mxTxt" style="margin:12px 0 0"></p></div>
+<div id="dd-qual"></div></section>
+
+<section id="treat"><h2>5. Risk treatment and residual risk</h2>
+<p class="lead">Total risk minus control effectiveness is residual risk. Watch the text’s ransomware example fall from $250,000 to a $50,000 accepted residual.</p>
+<div class="card"><div class="row"><button id="tplay">Apply treatments</button><button class="ghost" id="treset">Reset</button></div>
+<div class="bars" id="tbars" style="margin-top:12px"></div><p id="tTxt" class="small"></p>
+<div class="grid" style="margin-top:8px"><div class="mini"><h3>Accept</h3>Take no action; cost of control exceeds loss.</div><div class="mini"><h3>Avoid</h3>Stop the activity, e.g. close an unsafe branch.</div><div class="mini"><h3>Mitigate</h3>Safeguards prevent; countermeasures react.</div><div class="mini"><h3>Share/Transfer</h3>Insurance or partners. Accountability stays with you.</div></div></div>
+<div id="dd-treat"></div></section>
+
+<section id="threat"><h2>6. Threat modeling: STRIDE, DREAD, Attack Trees, PASTA</h2>
+<p class="lead">Click a STRIDE letter, then score a threat with DREAD.</p>
+<div class="grid" id="stride"></div><div class="card" id="strTxt">Select a category.</div>
+<div class="card"><h3 style="margin:0">DREAD scorer (1 to 10 each)</h3><div id="dread"></div><div class="out"><div><div class="small">Average</div><div class="big" id="dsc"></div></div><div><div class="small">Priority</div><div class="big" id="dpr"></div></div></div></div>
+<div class="card"><h3 style="margin:0 0 6px">Attack tree: steal customer data</h3><ul class="tree"><li><b>Goal:</b> exfiltrate database<ul><li>Steal credentials (phishing / spoofing)</li><li>Exploit unpatched web server (tampering)</li><li>Insider copies data (repudiation risk)</li></ul></li></ul><p class="small">Each branch is a subgoal; defenders cut the cheapest branch first. PASTA runs seven stages from business objectives to risk-based countermeasures.</p></div>
+<div id="dd-threat"></div></section>
+
+<section id="legal"><h2>7. Legal and regulatory compliance</h2>
+<p class="lead">Laws are a moral minimum: policy can add to them but never conflict. Toggle examples below.</p>
+<div class="grid" id="law"></div>
+<div id="dd-legal"></div></section>
+
+<section id="gloss"><h2>Glossary of terms</h2><input type="search" id="gs" placeholder="Search terms or full forms" aria-label="Search glossary"><dl id="gl"></dl></section>
+</main>
+<script>
+const $=id=>document.getElementById(id),money=n=>"$"+Math.round(n).toLocaleString("en-US");
+// ---- deep dives
+const DD={
+rmf:{t:"Frameworks",s:["Prepare: set context, scope, risk appetite","Categorize system and data by impact","Select baseline controls (SP 800-53)","Implement controls","Assess effectiveness","Authorize operation on a risk-based decision","Monitor continuously and loop back"],p:["Structured, repeatable, free to use","Aligns with ISO/IEC 27005 and 31000","Integrates security into system development"],c:["Documentation heavy","Can become a checkbox exercise","Federal flavour needs tailoring for small firms"],a:["Government: US federal agencies, FedRAMP cloud authorization","Defense: DoD contractors via CMMC and 800-171","Commercial: banks and healthcare adopt CSF; global firms certify to ISO 27001"]},
+chain:{t:"Risk event and assessment",s:["Frame: scope, appetite, owner","Identify threat sources and events","Identify vulnerabilities and predisposing conditions","Estimate likelihood and impact","Determine risk and write the Risk Assessment Report (RAR)","Communicate and maintain the assessment"],p:["Shows where one control breaks the chain","Gives common language between IT and business"],c:["Likelihood is an estimate, not a fact","Little data for new technology","Snapshot goes stale quickly"],a:["Commercial: ad hoc assessment after a new ransomware strain","Defense: mission risk assessments for weapons and C2 systems","Energy and utilities: SCADA threat and vulnerability reviews"]},
+quant:{t:"Quantitative method",s:["Value the asset (AV)","Estimate share lost per event (EF)","Compute SLE = AV × EF","Estimate yearly frequency (ARO)","Compute ALE = SLE × ARO","Compare ALE with control cost"],p:["Money language executives accept","Supports cost-benefit and ROI","Lets you rank unlike risks"],c:["Inputs are guesses; false precision","Hard for intangible assets like reputation","Needs good historical data"],a:["Insurance: actuarial pricing of cyber policies","Banking: operational risk capital models","Commercial IT: justifying a firewall or backup spend","Defense logistics: loss planning for critical facilities"]},
+qual:{t:"Qualitative method",s:["Build scenarios with stakeholders","Rate likelihood (Very Low to Very High)","Rate impact on the same scale","Look up the level in the matrix","Prioritize and feed the risk register"],p:["Fast and cheap","Works without financial data","Easy for business leaders to discuss"],c:["Subjective, depends on who is in the room","Hard to justify spend from “Level 5”","Coarse ranking"],a:["Government: agency risk workshops","Healthcare: clinical system safety reviews","Defense: mission-impact categorization (FIPS 199 style)","Startups: quick risk registers"]},
+treat:{t:"Risk treatment",s:["Take prioritized risks from the RAR","Pick accept, avoid, reduce or share per appetite","Do a cost-benefit analysis incl. running costs","Write an action plan: owner, resources, dates, milestones","Compute residual risk","Acceptable? If not, iterate; if yes, update the risk register"],p:["Iterative, cost-effective","Keeps risk within appetite","Insurance buys financial relief"],c:["Controls are only partly effective","Insurance can be cancelled and claims disputed","Accepted risk may cost more than estimated"],a:["Commercial: moving servers to cloud plus an MSSP","Aviation and defense: redundancy as mitigation","Retail: cyber insurance after baseline controls","Finance: closing a risky market (avoidance)"]},
+threat:{t:"Threat modeling",s:["Define objectives and scope","Decompose the system, mark trust boundaries","Identify threats (STRIDE, attack trees)","Score them (DREAD) or analyze with PASTA","Plan mitigations and document in the RAR","Re-model as threats evolve (APTs)"],p:["Finds design flaws early","Common vocabulary for developers and security","Covers authentication, privacy and safety beyond CIA"],c:["Needs skilled facilitators","DREAD scores can be subjective","Models go out of date"],a:["Software: Microsoft’s secure development lifecycle (STRIDE origin)","Defense: attack-tree analysis of weapon and satellite links","Automotive and medical devices: safety plus security reviews","Mobile and web apps: PASTA for risk-centric analysis"]},
+legal:{t:"Compliance",s:["Identify laws per country and industry","Map each requirement to policy and control","Cite laws in governance and training","Monitor legislative change","Audit and report"],p:["Avoids fines and legal exposure","Builds customer trust"],c:["Laws conflict across jurisdictions","Interpretation is uncertain","Compliance is not the same as security"],a:["Healthcare: HIPAA for PHI","Commercial: GDPR for personal data, PCI DSS for cards","Government contractors: FISMA, 800-171","Defense: export-control and CUI rules"]}};
+for(const k in DD){const d=DD[k],e=$("dd-"+k);e.innerHTML=`<details><summary>Working principle, pros, cons and applications: ${d.t}</summary><div class="dd"><div><h4>Working principle</h4><ol>${d.s.map(x=>`<li>${x}</li>`).join("")}</ol></div><div class="pro"><h4>Pros</h4><ul>${d.p.map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="con"><h4>Cons</h4><ul>${d.c.map(x=>`<li>${x}</li>`).join("")}</ul></div><div><h4>Where it works today</h4><ul>${d.a.map(x=>`<li>${x}</li>`).join("")}</ul></div></div></details>`}
+// ---- RMF
+const R=[["Prepare","Establish context, scope and risk appetite."],["Categorize","Set impact level of system and data."],["Select","Choose security controls."],["Implement","Deploy the controls."],["Assess","Test whether controls work."],["Authorize","Risk-based go/no-go decision."],["Monitor","Track and adjust continuously, then loop."]];
+let ri=0,rt=null;const rs=$("rmfSteps");
+R.forEach((r,i)=>{const b=document.createElement("button");b.className="st";b.innerHTML=`<b>${i+1}. ${r[0]}</b>`;b.onclick=()=>{stop();show(i)};rs.appendChild(b)});
+function show(i){ri=i;[...rs.children].forEach((c,j)=>c.classList.toggle("on",j==i));$("rmfTxt").textContent=R[i][1]}
+function stop(){clearInterval(rt);rt=null;$("play").textContent="Play loop"}
+$("play").onclick=()=>{if(rt)return stop();$("play").textContent="Pause";rt=setInterval(()=>show((ri+1)%7),1400)};show(0);
+// ---- chain
+const C=["Threat source","initiates → Threat event","exploits → Vulnerability","causing → Adverse impact"];
+$("chainEl").innerHTML=C.map((c,i)=>(i?'<span class="arrow">→</span>':"")+`<div class="node" id="n${i}">${c.split("→").pop().trim()}</div>`).join("");
+const Cx=["Hacker group (capability, intent, targeting)","Ransomware phishing campaign","Unpatched server; predisposing condition: poor patch process","Data encrypted, operations halted"];
+let busy=0;$("run").onclick=async()=>{if(busy)return;busy=1;const on=$("ctl").checked;[0,1,2,3].forEach(i=>$("n"+i).className="node");$("chainTxt").textContent="";
+for(let i=0;i<4;i++){await new Promise(r=>setTimeout(r,650));if(on&&i==2){$("n2").className="node blocked";$("chainTxt").textContent="Blocked: patched system and IPS stop the exploit. Residual risk remains (zero-days, human error).";busy=0;return}
+$("n"+i).className="node lit";$("chainTxt").textContent=Cx[i]}busy=0};
+// ---- quant
+function q(){const av=+$("av").value,ef=+$("ef").value/100,aro=+$("aro").value/1000,sle=av*ef,ale=sle*aro;
+$("avv").textContent=av.toLocaleString();$("efv").textContent=Math.round(ef*100);$("arov").textContent=aro.toFixed(3);$("aroy").textContent=(1/aro).toFixed(1);
+$("sle").textContent=money(sle);$("ale").textContent=money(ale);$("cap").textContent=money(ale);
+const m=Math.max(sle,1);$("b1").style.width=Math.max(8,100)+"%";$("b1").textContent="SLE "+money(sle);$("b2").style.width=Math.max(8,ale/m*100)+"%";$("b2").textContent="ALE "+money(ale)}
+["av","ef","aro"].forEach(i=>$(i).oninput=q);q();
+// ---- qual
+const L=["Very Low","Low","Moderate","High","Very High"],M={4:[0,1,2,3,4],3:[0,1,2,3,4],2:[0,1,2,2,3],1:[0,1,1,1,2],0:[0,0,0,1,1]},col=["#4e9a3a","#8fb23a","#e0b21f","#e5812e","#c8433a"];
+let h="<tr><th></th>"+L.map(x=>`<th>Impact: ${x}</th>`).join("")+"</tr>";
+for(let l=4;l>=0;l--)h+=`<tr><th>Likelihood: ${L[l]}</th>`+M[l].map((v,i)=>`<td style="background:${col[v]};color:#10222b" data-l="${l}" data-i="${i}">${L[v]}</td>`).join("")+"</tr>";
+$("mx").innerHTML=h;$("mx").onclick=e=>{const t=e.target.closest("td");if(!t)return;const l=+t.dataset.l,i=+t.dataset.i;$("mxTxt").textContent=`Likelihood ${L[l]} and impact ${L[i]} gives ${L[M[l][i]]} risk. ${M[l][i]>=3?"Treat promptly.":M[l][i]==2?"Plan treatment and monitor.":"Usually accept and monitor."}`};
+// ---- treat
+const S=[["Total risk (on-premises server, ransomware)",250],["After rehosting on cloud provider",150],["After MSSP with performance bond",50],["Residual risk accepted by management",50]];
+$("tbars").innerHTML=S.map((s,i)=>`<div class="track"><div class="bar" id="t${i}" style="width:0;background:${i==3?"var(--amb)":"var(--teal)"}">${s[0]}: $${s[1]}k</div></div>`).join("");
+let tt=[];function treset(){tt.forEach(clearTimeout);tt=[];S.forEach((s,i)=>$("t"+i).style.width="0");$("tTxt").textContent=""}
+$("treset").onclick=treset;$("tplay").onclick=()=>{treset();const msg=["Without action, ALE is $250,000.","Mitigate: cloud rehosting cuts ALE by $100,000.","Mitigate/share: MSSP plus bond cuts a further $100,000.","Accept: $50,000 residual risk is signed off and logged in the risk register."];
+S.forEach((s,i)=>tt.push(setTimeout(()=>{$("t"+i).style.width=Math.max(25,s[1]/250*100)+"%";$("tTxt").textContent=msg[i]},i*1300+100)))};
+// ---- STRIDE
+const ST=[["S","Spoofing","Impersonating another user","Authentication","Stolen login used to access payroll"],["T","Tampering","Altering data","Integrity","Changing an invoice amount in transit"],["R","Repudiation","Denying actions","Non-repudiation","Admin deletes records and denies it; fix with signed audit logs"],["I","Information disclosure","Exposing information","Confidentiality","Misconfigured storage leaks PII"],["D","Denial of Service","Disrupting service","Availability","Traffic flood takes the web store offline"],["E","Elevation of privilege","Gaining unauthorized access","Authorization","User exploits a bug to become admin"]];
+$("stride").innerHTML=ST.map((s,i)=>`<div class="mini" tabindex="0" role="button" data-i="${i}"><h3>${s[0]}: ${s[1]}</h3>${s[2]}</div>`).join("");
+const pick=e=>{const m=e.target.closest(".mini");if(!m)return;const s=ST[m.dataset.i];[...$("stride").children].forEach(c=>c.classList.toggle("on",c==m));$("strTxt").innerHTML=`<b>${s[1]}</b> violates <b>${s[3]}</b>. Example: ${s[4]}.`};
+$("stride").onclick=pick;$("stride").onkeydown=e=>{if(e.key=="Enter")pick(e)};
+const D=["Damage potential","Reproducibility","Exploitability","Affected users","Discoverability"];
+$("dread").innerHTML=D.map((d,i)=>`<label>${d}: <span id="dv${i}">5</span></label><input type="range" min="1" max="10" value="5" id="d${i}" aria-label="${d}">`).join("");
+function dr(){let t=0;D.forEach((d,i)=>{const v=+$("d"+i).value;$("dv"+i).textContent=v;t+=v});const a=t/5;$("dsc").textContent=a.toFixed(1);$("dpr").textContent=a>=7?"High":a>=4?"Medium":"Low";$("dpr").style.color=a>=7?"var(--red)":a>=4?"var(--amb)":"var(--grn)"}
+D.forEach((d,i)=>$("d"+i).oninput=dr);dr();
+// ---- law
+const LW=[["HIPAA (US)","Protects personal health information (PHI)."],["GDPR (EU)","Personal data rules, strict breach reporting and fines."],["PCI DSS","Industry standard for payment card data."],["FISMA / NIST 800-171","Federal systems and CUI in the supply chain."]];
+$("law").innerHTML=LW.map(l=>`<div class="mini"><h3>${l[0]}</h3>${l[1]}</div>`).join("")+`<div class="mini"><h3>Rule</h3>If law says encrypt all sensitive financial data, policy cannot exempt any of it, but may demand stronger encryption.</div>`;
+// ---- glossary
+const G=[["AV","Asset Value"],["EF","Exposure Factor: share of asset value lost per event"],["SLE","Single Loss Expectancy = AV × EF"],["ARO","Annual Rate of Occurrence"],["ALE","Annualized Loss Expectancy = SLE × ARO"],["RMF","Risk Management Framework (NIST SP 800-37)"],["CSF","Cybersecurity Framework"],["ISMS","Information Security Management System"],["ISO/IEC","International Organization for Standardization / International Electrotechnical Commission"],["NIST","National Institute of Standards and Technology"],["RAR","Risk Assessment Report"],["CIA","Confidentiality, Integrity, Availability"],["STRIDE","Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege"],["DREAD","Damage, Reproducibility, Exploitability, Affected users, Discoverability"],["PASTA","Process for Attack Simulation and Threat Analysis"],["APT","Advanced Persistent Threat"],["CUI","Controlled Unclassified Information"],["PII / PHI / PI","Personally Identifiable / Personal Health / Personal Information"],["MSSP","Managed Security Services Provider"],["IPS","Intrusion Prevention System"],["DLP","Data Loss Prevention"],["SLA","Service-Level Agreement"],["ROI","Return on Investment"],["Residual risk","Risk left after controls: total risk − control effectiveness"],["Risk appetite","How much risk management is willing to take"],["Safeguard / Countermeasure","Prevents an attack / reacts to and contains an attack"],["Risk register","Log tracking each risk and its treatment"],["Predisposing condition","Existing weakness that raises likelihood, e.g. poor patching"],["HIPAA / GDPR / PCI DSS","US health privacy law / EU data protection regulation / Payment Card Industry Data Security Standard"],["FISMA","Federal Information Security Modernization Act"]];
+function gl(f=""){f=f.toLowerCase();$("gl").innerHTML=G.filter(g=>(g[0]+g[1]).toLowerCase().includes(f)).map(g=>`<dt>${g[0]}</dt><dd>${g[1]}</dd>`).join("")||"<dd>No match. Try a shorter term.</dd>"}
+$("gs").oninput=e=>gl(e.target.value);gl();
+</script></body></html>
